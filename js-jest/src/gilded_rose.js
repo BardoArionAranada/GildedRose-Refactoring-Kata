@@ -1,6 +1,10 @@
 const AGED_BRIE = 'Aged Brie';
 const SULFURAS = 'Sulfuras, Hand of Ragnaros';
 const BACKSTAGE_PASSES = 'Backstage passes to a TAFKAL80ETC concert';
+const MIN_QUALITY = 0;
+const MAX_QUALITY = 50;
+const BACKSTAGE_SECOND_BONUS_DAY = 11;
+const BACKSTAGE_THIRD_BONUS_DAY = 6;
 
 class Item {
   constructor(name, sellIn, quality){
@@ -38,27 +42,27 @@ class Shop {
   }
 
   _updateNormalItem(item) {
-    if (item.quality <= 0) return;
+    if (item.quality <= MIN_QUALITY) return;
 
     this._decreaseQuality(item);
   }
 
   _updateAgedBrie(item) {
-    if (item.quality >= 50) return;
+    if (item.quality >= MAX_QUALITY) return;
 
     this._increaseQuality(item);
   }
 
   _updateBackstagePass(item) {
-    if (item.quality >= 50) return;
+    if (item.quality >= MAX_QUALITY) return;
 
     this._increaseQuality(item);
 
-    if (item.sellIn < 11) {
+    if (item.sellIn < BACKSTAGE_SECOND_BONUS_DAY) {
       this._increaseQuality(item);
     }
 
-    if (item.sellIn < 6) {
+    if (item.sellIn < BACKSTAGE_THIRD_BONUS_DAY) {
       this._increaseQuality(item);
     }
   }
@@ -74,7 +78,7 @@ class Shop {
     }
 
     if (this._isBackstagePass(item)) {
-      item.quality = 0;
+      item.quality = MIN_QUALITY;
       return;
     }
 
@@ -82,11 +86,11 @@ class Shop {
   }
 
   _increaseQuality(item) {
-    item.quality = Math.min(50, item.quality + 1);
+    item.quality = Math.min(MAX_QUALITY, item.quality + 1);
   }
 
   _decreaseQuality(item) {
-    item.quality = Math.max(0, item.quality - 1);
+    item.quality = Math.max(MIN_QUALITY, item.quality - 1);
   }
 
   _isAgedBrie(item) {
