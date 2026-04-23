@@ -1,123 +1,147 @@
-# Taller Refactorizacion Gilded Rose - Modulo 1
+# **Taller Refactorizacion Gilded Rose - Modulo 1**
 
-Universidad La Salle Bajio  
-Facultad de Ingenieria - Ingenieria en Software  
-Materia: Reingenieria de Software  
-Profesor: Javier Ivan Manzanares Cuadros  
+**Universidad La Salle Bajio**  
+Facultad de Ingenieria - Ingenieria en Software
 
-Alumno: Bardo Arion Aranda  
-Fecha: 21 de abril de 2026  
+**Materia:** Reingenieria de Software  
+**Profesor:** Javier Ivan Manzanares Cuadros
 
-## 1. Lectura de requisitos
+**Alumno:** Bardo Arion Aranda  
+**Fecha:** 21 de abril de 2026
 
-### Cuantos tipos de items diferentes se mencionan?
+## **Introduccion**
+Este modulo sirve para entender el comportamiento de un sistema legacy antes de tocarlo. La idea fue revisar los requisitos, leer el codigo real y crear pruebas que protejan el comportamiento actual.
 
-Se mencionan cinco tipos de items:
+En este kata trabaje con la version de **JavaScript** usando **Jest**, porque ahi me resulto mas claro hacer los tests de caracterizacion y mantener el comportamiento del sistema bajo control.
 
-1. Item normal.
-2. Aged Brie.
-3. Sulfuras, Hand of Ragnaros.
-4. Backstage passes to a TAFKAL80ETC concert.
-5. Conjured, que es el nuevo item que se implementara al final del kata.
+## **1. Preparacion del entorno**
+Repositorio usado:
 
-### Cual es el comportamiento de cada uno?
+`git clone https://github.com/BardoArionAranada/GildedRose-Refactoring-Kata.git`
 
-El item normal pierde calidad con el paso del tiempo. Antes de la fecha de venta pierde 1 punto de calidad por dia y, cuando la fecha ya paso, pierde 2 puntos por dia.
+Carpeta de trabajo:
 
-Aged Brie aumenta su calidad conforme envejece. Antes de la fecha de venta aumenta 1 punto y, despues de la fecha de venta, aumenta 2 puntos. Su calidad no debe superar 50.
+`D:\08_Octavo semestre La Salle\REINGENIERÍA DE SOFTWARE\REINIGIENERIA\TAREA COLONAR REPO\GildedRose-Refactoring-Kata`
 
-Sulfuras es un item legendario. No baja su calidad, no cambia su sellIn y su quality se mantiene en 80.
+Ruta trabajada en este modulo:
 
-Backstage passes aumenta su calidad mientras se acerca el concierto: aumenta 1 punto cuando faltan mas de 10 dias, aumenta 2 puntos cuando faltan 10 dias o menos, aumenta 3 puntos cuando faltan 5 dias o menos, y despues del concierto su calidad cae a 0.
+`js-jest`
 
-Conjured es el item nuevo que se implementara en un modulo posterior. Su regla indica que se degrada el doble de rapido que un item normal.
+Rama utilizada:
 
-### Que significa sellIn?
+`practica/refactoring-gilded-rose`
 
-sellIn representa la cantidad de dias que quedan para vender el item. Al final de cada dia, el sistema reduce este valor para todos los items, excepto Sulfuras.
+Comandos que use:
 
-### Que significa quality?
+```bash
+git clone https://github.com/BardoArionAranada/GildedRose-Refactoring-Kata.git
+cd GildedRose-Refactoring-Kata
+git switch -c practica/refactoring-gilded-rose
+cd js-jest
+npm ci
+npm test
+```
 
-quality representa que tan valioso es el item. En general, la calidad baja con el tiempo, aunque existen items especiales como Aged Brie y Backstage passes que aumentan su calidad bajo ciertas condiciones.
+## **2. Lectura de requisitos**
+Se mencionan **cinco tipos de items**:
 
-### Cuales son los limites de quality?
+- Item normal
+- Aged Brie
+- Sulfuras, Hand of Ragnaros
+- Backstage passes to a TAFKAL80ETC concert
+- Conjured
 
-La calidad de un item nunca debe ser negativa y nunca debe ser mayor que 50. La excepcion es Sulfuras, que es un item legendario con calidad fija de 80.
+### **Comportamiento de cada uno**
+- **Item normal:** baja 1 de quality por dia y, despues de `sellIn`, baja 2.
+- **Aged Brie:** sube de quality con el tiempo y no puede pasar de 50.
+- **Sulfuras:** no cambia `sellIn`, no cambia `quality` y se queda en 80.
+- **Backstage passes:** sube mas rapido conforme se acerca el concierto y luego cae a 0.
+- **Conjured:** se degrada el doble de rapido que un item normal.
 
-### Cual es la restriccion mas importante sobre la clase Item?
+### **sellIn**
+Es el numero de dias que faltan para vender el item.
 
-La restriccion principal es no modificar la clase Item ni la propiedad items de GildedRose/Shop. Esta regla simula codigo compartido o de terceros que no se puede cambiar directamente.
+### **quality**
+Es el valor del item. En general baja con el tiempo, aunque algunos items especiales suben.
 
-### Que nuevo item hay que implementar al final del kata?
+### **Limites**
+- `quality` no debe ser negativa.
+- `quality` normalmente no debe pasar de 50.
+- La excepcion es **Sulfuras**, que siempre vale 80.
 
-El nuevo item es Conjured. Su comportamiento esperado es degradarse el doble de rapido que un item normal.
+### **Restriccion importante**
+No se debe modificar la clase **Item** ni la propiedad **items** de **Shop**.
 
-## 2. Ficha de analisis de codigo legacy
+## **3. Analisis del codigo legacy**
+Archivo principal analizado:
 
-### Olores de codigo detectados
+`js-jest/src/gilded_rose.js`
 
-- Metodo demasiado largo: updateQuality concentra toda la logica de negocio en un solo metodo.
-- Condicionales anidados: existen varios if dentro de otros if, lo que dificulta leer los casos de negocio.
-- Numeros magicos: aparecen valores como 0, 50, 80, 11 y 6 sin nombres descriptivos.
-- Strings literales repetidos: se usan directamente nombres como "Aged Brie", "Sulfuras, Hand of Ragnaros" y "Backstage passes to a TAFKAL80ETC concert".
-- Falta de abstraccion: cada tipo de item se decide por comparaciones de texto dentro del mismo metodo.
-- Baja separacion de responsabilidades: Shop actualiza todos los comportamientos, valida limites y conoce reglas especificas de cada item.
+Metodo principal:
 
-### Puntos de cambio para agregar Conjured
+`updateQuality()`
 
-El punto de cambio estaria dentro de src/gilded_rose.js, en el metodo updateQuality, aproximadamente entre las lineas 14 y 57. Directamente ahi se decide como se modifica quality y sellIn segun el nombre del item.
+Ahí se concentra casi toda la logica del sistema. El codigo mezcla reglas de negocio, validaciones y actualizacion diaria en un solo metodo, por eso es dificil de leer y mantener.
 
-El riesgo de modificar ahi directamente es alto porque la logica ya esta muy anidada. Agregar otro caso con mas condicionales puede romper el comportamiento de items existentes como Aged Brie, Sulfuras o Backstage passes. Por eso primero se construyo una red de tests de caracterizacion.
+## **4. Olores de codigo detectados**
+- Metodo demasiado largo.
+- Condicionales anidados.
+- Strings literales repetidos.
+- Numeros magicos.
+- Falta de abstraccion.
+- Baja separacion de responsabilidades.
 
-### Dependencias identificadas
+## **5. Puntos de cambio para agregar Conjured**
+La logica de **Conjured** se agregaria dentro de `updateQuality()`, en la parte donde se revisa el nombre del item.
 
-La clase Shop usa objetos de la clase Item. Cada Item tiene tres propiedades: name, sellIn y quality. El metodo updateQuality es llamado por los tests y representa la actualizacion diaria del inventario.
+El riesgo de tocar esa zona directo es que el metodo ya tiene mucha logica anidada. Agregar algo nuevo sin pruebas podria romper items como **Aged Brie**, **Sulfuras** o **Backstage passes**.
 
-### Preguntas sin respuesta o comportamientos ambiguos
+## **6. Dependencias identificadas**
+La clase **Shop** trabaja con objetos **Item**. Cada item usa:
 
-- Que deberia pasar si un item entra con quality negativa?
-- Que deberia pasar si un item entra con quality mayor a 50 y no es Sulfuras?
-- Que comportamiento exacto debe tener un item con nombre desconocido?
-- Debe validarse el nombre del item o simplemente tratarse como item normal?
-- Conjured debe degradarse el doble tambien despues de sellIn menor que 0?
+- `name`
+- `sellIn`
+- `quality`
 
-## 3. Red de seguridad con tests de caracterizacion
+La relacion principal es:
 
-Se trabajo en la variante JavaScript con Jest, dentro de la carpeta js-jest.
+- **Shop** contiene una lista de **Item**
+- **Shop** ejecuta `updateQuality()`
+- `updateQuality()` modifica `sellIn` y `quality`
 
-Archivo de tests:
+## **7. Preguntas ambiguas**
+- ¿Que pasa si un item entra con `quality` negativa?
+- ¿Que pasa si entra con `quality` mayor a 50 y no es Sulfuras?
+- ¿Un item desconocido se trata como item normal?
+- ¿Conjured debe degradarse igual cuando `sellIn` ya es menor que 0?
 
-`test/gilded_rose.test.js`
+## **8. Red de seguridad con tests**
+Se reemplazo el test falso inicial por una suite de **14 tests de caracterizacion** en `js-jest/test/gilded_rose.test.js`.
 
-La suite incluye 14 tests de caracterizacion que cubren:
+Casos cubiertos:
 
-- Items normales antes y despues de la fecha de venta.
-- Limite inferior de quality en 0.
-- Comportamiento de nombres desconocidos.
-- Aged Brie antes y despues de la fecha de venta.
-- Limite superior de quality en 50.
-- Sulfuras sin cambios en quality ni sellIn.
-- Backstage passes con mas de 10 dias, con 10 dias o menos, con 5 dias o menos, despues del concierto y cerca del limite de calidad.
+- Item normal antes y despues de `sellIn`
+- Limite inferior de `quality`
+- Item desconocido
+- Aged Brie antes y despues de `sellIn`
+- Limite superior de `quality`
+- Sulfuras
+- Backstage passes en varios escenarios
 
-Comando de ejecucion:
+Comando para correrlo:
 
 ```bash
 npm test
 ```
 
-Resultado esperado:
-
-```text
-14 tests passed
-```
-
-## 4. Commit obligatorio del modulo
-
-Comando solicitado por el taller:
+## **9. Evidencia del commit**
+El commit que guarda la red de seguridad es:
 
 ```bash
-git add .
 git commit -m "test: add characterization tests as safety net"
 ```
 
-Este commit representa la red de seguridad antes de cualquier refactorizacion o implementacion de nueva funcionalidad.
+Ese commit representa el punto donde el sistema ya tiene una base segura antes de refactorizar.
+
+## **10. Conclusiones**
+En este modulo entendi el comportamiento real del sistema, identifique sus problemas principales y deje pruebas para protegerlo. Con eso ya se puede avanzar al modulo 2 sin tocar a ciegas el codigo de produccion.
