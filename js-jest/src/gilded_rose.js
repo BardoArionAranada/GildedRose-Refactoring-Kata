@@ -118,15 +118,15 @@ class SulfurasItemUpdater extends ItemUpdater {
 
 class ItemUpdaterFactory {
   static forItem(item) {
-    if (item.name == AGED_BRIE) {
+    if (item.name === AGED_BRIE) {
       return new AgedBrieItemUpdater(item);
     }
 
-    if (item.name == BACKSTAGE_PASSES) {
+    if (item.name === BACKSTAGE_PASSES) {
       return new BackstagePassItemUpdater(item);
     }
 
-    if (item.name == SULFURAS) {
+    if (item.name === SULFURAS) {
       return new SulfurasItemUpdater(item);
     }
 
@@ -140,8 +140,8 @@ class Shop {
   }
 
   updateQuality() {
-    for (let i = 0; i < this.items.length; i++) {
-      ItemUpdaterFactory.forItem(this.items[i]).update();
+    for (const item of this.items) {
+      ItemUpdaterFactory.forItem(item).update();
     }
 
     return this.items;
