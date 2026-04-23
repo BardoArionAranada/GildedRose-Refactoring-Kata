@@ -1,6 +1,7 @@
 const AGED_BRIE = 'Aged Brie';
 const SULFURAS = 'Sulfuras, Hand of Ragnaros';
 const BACKSTAGE_PASSES = 'Backstage passes to a TAFKAL80ETC concert';
+const CONJURED = 'Conjured Mana Cake';
 const MIN_QUALITY = 0;
 const MAX_QUALITY = 50;
 const BACKSTAGE_SECOND_BONUS_DAY = 11;
@@ -112,6 +113,22 @@ class BackstagePassItemUpdater extends ItemUpdater {
   }
 }
 
+class ConjuredItemUpdater extends ItemUpdater {
+  updateQualityBeforeSellIn() {
+    this.decreaseQuality();
+    this.decreaseQuality();
+  }
+
+  updateQualityAfterSellIn() {
+    if (!this.isExpired()) {
+      return;
+    }
+
+    this.decreaseQuality();
+    this.decreaseQuality();
+  }
+}
+
 class SulfurasItemUpdater extends ItemUpdater {
   update() {}
 }
@@ -124,6 +141,10 @@ class ItemUpdaterFactory {
 
     if (item.name === BACKSTAGE_PASSES) {
       return new BackstagePassItemUpdater(item);
+    }
+
+    if (item.name === CONJURED) {
+      return new ConjuredItemUpdater(item);
     }
 
     if (item.name === SULFURAS) {
