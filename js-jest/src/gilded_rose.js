@@ -14,110 +14,137 @@ class Item {
   }
 }
 
+class ItemUpdater {
+  constructor(item) {
+    this.item = item;
+  }
+
+  update() {
+    this.updateQualityBeforeSellIn();
+    this.decreaseSellIn();
+    this.updateQualityAfterSellIn();
+  }
+
+  updateQualityBeforeSellIn() {}
+
+  updateQualityAfterSellIn() {}
+
+  increaseQuality() {
+    this.item.quality = Math.min(MAX_QUALITY, this.item.quality + 1);
+  }
+
+  decreaseQuality() {
+    this.item.quality = Math.max(MIN_QUALITY, this.item.quality - 1);
+  }
+
+  decreaseSellIn() {
+    this.item.sellIn = this.item.sellIn - 1;
+  }
+
+  resetQuality() {
+    this.item.quality = MIN_QUALITY;
+  }
+
+  isExpired() {
+    return this.item.sellIn < 0;
+  }
+}
+
+class NormalItemUpdater extends ItemUpdater {
+  updateQualityBeforeSellIn() {
+    if (this.item.quality <= MIN_QUALITY) {
+      return;
+    }
+
+    this.decreaseQuality();
+  }
+
+  updateQualityAfterSellIn() {
+    if (!this.isExpired()) {
+      return;
+    }
+
+    this.updateQualityBeforeSellIn();
+  }
+}
+
+class AgedBrieItemUpdater extends ItemUpdater {
+  updateQualityBeforeSellIn() {
+    if (this.item.quality >= MAX_QUALITY) {
+      return;
+    }
+
+    this.increaseQuality();
+  }
+
+  updateQualityAfterSellIn() {
+    if (!this.isExpired()) {
+      return;
+    }
+
+    this.updateQualityBeforeSellIn();
+  }
+}
+
+class BackstagePassItemUpdater extends ItemUpdater {
+  updateQualityBeforeSellIn() {
+    if (this.item.quality >= MAX_QUALITY) {
+      return;
+    }
+
+    this.increaseQuality();
+
+    if (this.item.sellIn < BACKSTAGE_SECOND_BONUS_DAY) {
+      this.increaseQuality();
+    }
+
+    if (this.item.sellIn < BACKSTAGE_THIRD_BONUS_DAY) {
+      this.increaseQuality();
+    }
+  }
+
+  updateQualityAfterSellIn() {
+    if (!this.isExpired()) {
+      return;
+    }
+
+    this.resetQuality();
+  }
+}
+
+class SulfurasItemUpdater extends ItemUpdater {
+  update() {}
+}
+
+class ItemUpdaterFactory {
+  static forItem(item) {
+    if (item.name == AGED_BRIE) {
+      return new AgedBrieItemUpdater(item);
+    }
+
+    if (item.name == BACKSTAGE_PASSES) {
+      return new BackstagePassItemUpdater(item);
+    }
+
+    if (item.name == SULFURAS) {
+      return new SulfurasItemUpdater(item);
+    }
+
+    return new NormalItemUpdater(item);
+  }
+}
+
 class Shop {
   constructor(items=[]){
     this.items = items;
   }
+
   updateQuality() {
     for (let i = 0; i < this.items.length; i++) {
-      const item = this.items[i];
-      this._updateItem(item);
+      ItemUpdaterFactory.forItem(this.items[i]).update();
     }
 
     return this.items;
-  }
-
-  _updateItem(item) {
-    if (this._isSulfuras(item)) {
-      return;
-    }
-
-    this._updateItemQuality(item);
-    this._decreaseSellIn(item);
-    this._updateExpiredItemQuality(item);
-  }
-
-  _updateItemQuality(item) {
-    if (this._isAgedBrie(item)) return this._updateAgedBrie(item);
-    if (this._isBackstagePass(item)) return this._updateBackstagePass(item);
-
-    this._updateNormalItem(item);
-  }
-
-  _updateNormalItem(item) {
-    if (item.quality <= MIN_QUALITY) return;
-
-    this._decreaseQuality(item);
-  }
-
-  _updateAgedBrie(item) {
-    if (item.quality >= MAX_QUALITY) return;
-
-    this._increaseQuality(item);
-  }
-
-  _updateBackstagePass(item) {
-    if (item.quality >= MAX_QUALITY) return;
-
-    this._increaseQuality(item);
-
-    if (item.sellIn < BACKSTAGE_SECOND_BONUS_DAY) {
-      this._increaseQuality(item);
-    }
-
-    if (item.sellIn < BACKSTAGE_THIRD_BONUS_DAY) {
-      this._increaseQuality(item);
-    }
-  }
-
-  _updateExpiredItemQuality(item) {
-    if (!this._isExpired(item)) {
-      return;
-    }
-
-    if (this._isAgedBrie(item)) {
-      this._updateAgedBrie(item);
-      return;
-    }
-
-    if (this._isBackstagePass(item)) {
-      this._resetQuality(item);
-      return;
-    }
-
-    this._updateNormalItem(item);
-  }
-
-  _increaseQuality(item) {
-    item.quality = Math.min(MAX_QUALITY, item.quality + 1);
-  }
-
-  _decreaseQuality(item) {
-    item.quality = Math.max(MIN_QUALITY, item.quality - 1);
-  }
-
-  _decreaseSellIn(item) {
-    item.sellIn = item.sellIn - 1;
-  }
-
-  _resetQuality(item) {
-    item.quality = MIN_QUALITY;
-  }
-
-  _isExpired(item) {
-    return item.sellIn < 0;
-  }
-
-  _isAgedBrie(item) {
-    return item.name == AGED_BRIE;
-  }
-
-  _isBackstagePass(item) {
-    return item.name == BACKSTAGE_PASSES;
-  }
-
-  _isSulfuras(item) {
-    return item.name == SULFURAS;
   }
 }
 
