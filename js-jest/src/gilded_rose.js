@@ -21,17 +21,20 @@ class Shop {
   updateQuality() {
     for (let i = 0; i < this.items.length; i++) {
       const item = this.items[i];
-
-      if (this._isSulfuras(item)) {
-        continue;
-      }
-
-      this._updateItemQuality(item);
-      item.sellIn = item.sellIn - 1;
-      this._updateExpiredItemQuality(item);
+      this._updateItem(item);
     }
 
     return this.items;
+  }
+
+  _updateItem(item) {
+    if (this._isSulfuras(item)) {
+      return;
+    }
+
+    this._updateItemQuality(item);
+    this._decreaseSellIn(item);
+    this._updateExpiredItemQuality(item);
   }
 
   _updateItemQuality(item) {
@@ -68,7 +71,7 @@ class Shop {
   }
 
   _updateExpiredItemQuality(item) {
-    if (item.sellIn >= 0) {
+    if (!this._isExpired(item)) {
       return;
     }
 
@@ -78,7 +81,7 @@ class Shop {
     }
 
     if (this._isBackstagePass(item)) {
-      item.quality = MIN_QUALITY;
+      this._resetQuality(item);
       return;
     }
 
@@ -91,6 +94,18 @@ class Shop {
 
   _decreaseQuality(item) {
     item.quality = Math.max(MIN_QUALITY, item.quality - 1);
+  }
+
+  _decreaseSellIn(item) {
+    item.sellIn = item.sellIn - 1;
+  }
+
+  _resetQuality(item) {
+    item.quality = MIN_QUALITY;
+  }
+
+  _isExpired(item) {
+    return item.sellIn < 0;
   }
 
   _isAgedBrie(item) {
